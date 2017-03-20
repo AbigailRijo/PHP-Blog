@@ -1,6 +1,41 @@
   <?php
       $datos = json_decode(file_get_contents('usu.txt'), 1);
       $email = $datos['correo'];
+
+
+     if ($_POST) {
+       # code...
+      $dat = $_POST;
+
+       if (isset($dat['comentario'])){
+         # code...
+       echo "comente";
+        $comentario =  $dat['comentario'];
+        $id_usuario = $datos['id'];
+
+       $CI =& get_instance();
+       $miSql = "insert into comentario(id_usuario, comentario) values ($id_usuario , '$comentario')";
+       $rs = $CI->db->query($miSql);
+       //$rs = $rs->result();
+     }else{
+       echo "respondi";
+        $respuesta =  $dat['respuesta'];
+        $id_usuario = $datos['id'];
+        $id_comentario = $dat['id_comentario'];
+       $CI =& get_instance();
+       //$miSql = "insert into respuesta(id_comentario, id_usuario, respuesta) values ($id_comentario, $id_usuario , '$respuesta')";
+
+       $resp = new stdClass();
+       $resp->id_comentario = $id_comentario;
+       $resp->id_usuario = $id_usuario;
+       $resp->respuesta = $respuesta;
+       $CI->db->insert('respuesta',$resp);
+
+       //$rs = $CI->db->query($miSql);
+
+     }
+     }
+
    ?>
     <!DOCTYPE html>
     <html>
@@ -60,7 +95,7 @@
       </div>
       <!-- Contenedor Principal -->
 <div class='comments-container'>
-    <h1>Comentarios <a href="http://creaticode.com">creaticode.com</a></h1>
+    <h1>Comentarios</h1>
 	<ul id="comments-list" class="comments-list">
 	 <?php
 	   	 $query= "select * from comentario";
@@ -112,7 +147,7 @@
         }
 				echo "<li>
 					<!-- Avatar -->
-					<div class='comment-avatar'><img src='images/avatar_o.png' alt=''></div>
+					<div class='comment-avatar'><img src='".base_url("fotos/{$valor->id_usuario}.jpg")."'/> </div>
 					<!-- Contenedor del Comentario -->
 					<div class='comment-box'>
 						<div class='comment-head'>
@@ -120,30 +155,34 @@
 							<span>".$valor->correo."</span>
 								<i class='fa fa-heart'></i>
 						</div>
-						<div class='comment-content'>".$valor->comentario."</div>
+						<div class='comment-content'>".$valor->respuesta."</div>
 					</div>
 				</li>";
 
     }
-			echo "</ul>";
+
+
+			echo "</ul>
+      <div class='row'>
+          <div class='col col-sm-9 col-sm-offset-3'>
+            <form method='post' action=''>
+              <div class='form-group input-group'>
+                  <label class='input-group-addon'>Respuesta:</label>
+                  <input type='hidden' value='".$result->id."' name= 'id_comentario'></input>
+                  <textarea class='form-control' name='respuesta'></textarea>
+                  </div>
+                  <div class='text-center'>
+                  <button type='submit' class='btn btn-danger'>Publicar</button>
+                  </div>
+            </form>
+          </div>
+        </div>";
 
  }
 	 ?>
 	</ul>
 </div>
-        <div class="row">
-          <div class="col col-sm-5 col-sm-offset-4">
-            <form method="post" action="">
-              <div class="form-group input-group">
-                  <label class="input-group-addon">Respuesta:</label>
-                  <textarea class="form-control" name="comentario"></textarea>
-                  </div>
-                  <div class="text-center">
-                  <button type="submit" class="btn btn-danger">Publicar</button>
-                  </div>
-            </form>
-          </div>
-        </div>
+
       <style>
       body {
       	background-color: #CEF6F5;
