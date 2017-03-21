@@ -16,6 +16,14 @@
        $CI =& get_instance();
        $miSql = "insert into comentario(id_usuario, comentario) values ($id_usuario , '$comentario')";
        $rs = $CI->db->query($miSql);
+
+       $cod = $this->db->insert_id();
+       $foto = $_FILES['foto'];
+
+       if($foto['error'] == 0){
+       $tmp = "publicaciones/{$cod}.jpg";
+       move_uploaded_file($foto['tmp_name'], $tmp);
+     }
        //$rs = $rs->result();
      }else{
        echo "respondi";
@@ -59,6 +67,13 @@
       <!-- Latest compiled and minified JavaScript -->
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+      <style>
+             .thumb {
+               height: 300px;
+               border: 1px solid #000;
+               margin: 10px 5px 0 0;
+             }
+           </style>
 
     </head>
     <body>
@@ -73,7 +88,7 @@
             <li><a href="<?php echo base_url('blog/contacto'); ?>">contacto</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a ><span class="glyphicon glyphicon-user"></span><?php echo $email; ?></a></li>
+            <li><a ><span class="glyphicon glyphicon-user"></span>  <?php echo $email; ?>   </a></li>
             <li><a href="<?php echo base_url('usuario/salir'); ?>"><span class="glyphicon glyphicon-log-in"></span> Salir</a></li>
           </ul>
         </div>
@@ -82,14 +97,14 @@
       <div id="comentario" class="row">
         <div class="col col-sm-6 col-sm-offset-3">
           <h4>Agregar un nuevo tema al blog</h4>
-          <form method="post" action="">
-            <div class="form-group input-group">
-                <label class="input-group-addon">Comentario:</label>
+          <form enctype="multipart/form-data" method="post" action="">
                 <textarea class="form-control" name="comentario"></textarea>
-                </div>
+                <input type="file" id="files" name="foto" />
                 <div class="text-center">
-                <button type="submit" class="btn btn-danger">Publicar</button>
+                <button type="submit" class="pull-right btn-danger">Publicar</button>
                 </div>
+              <br />
+              <output id="list"></output>
           </form>
         </div>
       </div>
@@ -98,85 +113,81 @@
     <h1>Comentarios</h1>
 	<ul id="comments-list" class="comments-list">
 	 <?php
-	   	 $query= "select * from comentario";
+	   	 $query= "select *, comentario.id as comentarioID  from comentario left join personas on comentario.id_usuario = personas.id";
 
                $CI =& get_instance();
 
                $rs = $CI->db->query($query);
-                 $rs = $rs->result();
+                 $comentarios = $rs->result();
 
-            	 foreach ($rs as $result)  {
-              $sql = "select * from personas join comentario where personas.id = '".$result->id_usuario."'";
-              $res = $CI->db->query($sql);
-              $res = $res->result();
-              foreach ($res as $key) {
-}
+            	 foreach ($comentarios as $comentario)  {
+
+                  // $variable = base_url('publicaciones/{$comentario->comentarioID}.jpg')
+                if(base_url('publicaciones/{$comentario->comentarioID}.jpg')){
+                     $variable = "<img  src='".base_url("publicaciones/{$comentario->comentarioID}.jpg")."'/>.";
+                   }else{
+                     $variable= "";
+                   }
+
+
 		 echo "<li>
 				<div class='comment-main-level'>
 					<!-- Avatar -->
-					<div class='comment-avatar'><img src='".base_url("fotos/{$result->id_usuario}.jpg")."'/> </div>
+					<div class='comment-avatar'><img src='".base_url("fotos/{$comentario->id_usuario}.jpg")."'/> </div>
 					<!-- Contenedor del Comentario -->
 					<div class='comment-box'>
 						<div class='comment-head'>
 							<h6 class='comment-name by-author><a href=''</a></h6>
-							<span>".$key->correo."</span>
+							<span>".$comentario->correo."</span>
 							<i class='fa fa-reply'></i>
 							<i class='fa fa-heart'></i>
 						</div>
-						<div class='comment-content'>".$result->comentario."</div>
+						<div class='comment-content'>".$comentario->comentario."<br/><br/>".$variable."</div>
 					</div>
 				</div>
 			</li>";
 			echo "<!-- Respuestas de los comentarios -->
             <ul class='comments-list reply-list'>";
 
-			$sc = "select * from respuesta join comentario where respuesta.id_comentario= '".$result->id."'";
+			$sc = "select * from respuesta left join personas on respuesta.id_usuario = personas.id where respuesta.id_comentario= '".$comentario->comentarioID."'";
 
       $var = $CI->db->query($sc);
 
-      $var = $var->result();
+      $respuestas = $var->result();
         # code...
 
-			foreach ($var as $value){
+			foreach ($respuestas as $respuesta){
 
-        $sqly = "select * from personas join respuesta where personas.id = '".$value->id_usuario."'";
-        $vari = $CI->db->query($sqly);
-        $vari = $vari->result();
-        foreach ($vari as $valor) {
 
-        }
 				echo "<li>
 					<!-- Avatar -->
-					<div class='comment-avatar'><img src='".base_url("fotos/{$valor->id_usuario}.jpg")."'/> </div>
+					<div class='comment-avatar'><img src='".base_url("fotos/{$respuesta->id_usuario}.jpg")."'/> </div>
 					<!-- Contenedor del Comentario -->
 					<div class='comment-box'>
 						<div class='comment-head'>
 							<h6 class='comment-name'><a href=''></a></h6>
-							<span>".$valor->correo."</span>
+							<span>".$respuesta->correo."</span>
 								<i class='fa fa-heart'></i>
 						</div>
-						<div class='comment-content'>".$valor->respuesta."</div>
+						<div class='comment-content'>".$respuesta->respuesta."</div>
 					</div>
 				</li>";
 
     }
-
-
 			echo "</ul>
       <div class='row'>
           <div class='col col-sm-9 col-sm-offset-3'>
             <form method='post' action=''>
-              <div class='form-group input-group'>
-                  <label class='input-group-addon'>Respuesta:</label>
-                  <input type='hidden' value='".$result->id."' name= 'id_comentario'></input>
-                  <textarea class='form-control' name='respuesta'></textarea>
-                  </div>
+                  <input type='hidden' value='".$comentario->comentarioID."' name= 'id_comentario'></input>
+                  <textarea placeholder= 'responer esta conversacion...' class='form-control' name='respuesta'></textarea>
                   <div class='text-center'>
-                  <button type='submit' class='btn btn-danger'>Publicar</button>
+                  <button type='submit' class='pull-right btn btn-danger'>Responder</button>
                   </div>
             </form>
           </div>
-        </div>";
+        </div>
+     <br>
+        ";
 
  }
 	 ?>
@@ -217,6 +228,10 @@ body {
 /** ====================
  * Lista de Comentarios
  =======================*/
+img{
+  width: 200px;
+}
+
 .comments-container {
 	margin: 60px auto 15px;
 	width: 768px;
@@ -456,6 +471,33 @@ body {
 	}
 }
       </style>
+
+      <script>
+             function archivo(evt) {
+                 var files = evt.target.files; // FileList object
+
+                 // Obtenemos la imagen del campo "file".
+                 for (var i = 0, f; f = files[i]; i++) {
+                   //Solo admitimos imágenes.
+                   if (!f.type.match('image.*')) {
+                       continue;
+                   }
+
+                   var reader = new FileReader();
+
+                   reader.onload = (function(theFile) {
+                       return function(e) {
+                         // Insertamos la imagen
+                        document.getElementById("list").innerHTML = ['<img class="thumb" src="', e.target.result,'" title="', escape(theFile.name), '"/>'].join('');
+                       };
+                   })(f);
+
+                   reader.readAsDataURL(f);
+                 }
+             }
+
+             document.getElementById('files').addEventListener('change', archivo, false);
+     </script>
       </body>
 
       </html>
